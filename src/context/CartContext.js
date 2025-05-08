@@ -13,16 +13,16 @@ export function CartProvider({ children }) {
     
     try {
       const response = await fetch(`http://localhost:3001/api/cart/${user.id}`);
-      if (!response.ok) throw new Error('Greška pri dohvatanju košarice');
+      if (!response.ok) throw new Error('Error fetching cart');
       const data = await response.json();
       setCartItems(data);
     } catch (error) {
-      console.error('Greška pri dohvatanju košarice:', error);
-      toast.error('Nije moguće dohvatiti košaricu');
+      console.error('Error fetching cart:', error);
+      toast.error('Unable to fetch cart');
     }
   }, [user]);
 
-  // Učitaj košaricu kada se korisnik prijavi
+  // Load cart when user logs in
   useEffect(() => {
     if (user) {
       fetchCart();
@@ -33,7 +33,7 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback(async (product) => {
     if (!user) {
-      toast.error('Morate biti prijavljeni da biste dodali proizvode u košaricu');
+      toast.error('You must be logged in to add items to cart');
       return;
     }
 
@@ -49,14 +49,14 @@ export function CartProvider({ children }) {
         })
       });
 
-      if (!response.ok) throw new Error('Greška pri dodavanju u košaricu');
+      if (!response.ok) throw new Error('Error adding to cart');
 
-      // Osvježi košaricu nakon dodavanja
+      // Refresh cart after adding
       await fetchCart();
-      toast.success(`${product.name} dodan u košaricu!`);
+      toast.success(`${product.name} added to cart!`);
     } catch (error) {
-      console.error('Greška pri dodavanju u košaricu:', error);
-      toast.error('Nije moguće dodati proizvod u košaricu');
+      console.error('Error adding to cart:', error);
+      toast.error('Unable to add product to cart');
     }
   }, [user, fetchCart]);
 
@@ -68,16 +68,19 @@ export function CartProvider({ children }) {
         method: 'DELETE'
       });
 
-      if (!response.ok) throw new Error('Greška pri uklanjanju iz košarice');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
-      // Osvježi košaricu nakon uklanjanja
-      await fetchCart();
-      toast.error('Proizvod uklonjen iz košarice');
+      const data = await response.json();
+      setCartItems(data.cartItems);
+      toast.error('Product removed from cart');
     } catch (error) {
-      console.error('Greška pri uklanjanju iz košarice:', error);
-      toast.error('Nije moguće ukloniti proizvod iz košarice');
+      console.error('Error removing from cart:', error);
+      toast.error(error.message || 'Unable to remove product from cart');
     }
-  }, [user, fetchCart]);
+  }, [user]);
 
   const updateQuantity = useCallback(async (productId, newQuantity) => {
     if (!user || newQuantity < 1) return;
@@ -91,16 +94,19 @@ export function CartProvider({ children }) {
         body: JSON.stringify({ quantity: newQuantity })
       });
 
-      if (!response.ok) throw new Error('Greška pri ažuriranju količine');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
-      // Osvježi košaricu nakon ažuriranja
-      await fetchCart();
-      toast.info('Količina ažurirana');
+      const data = await response.json();
+      setCartItems(data.cartItems);
+      toast.info('Quantity updated');
     } catch (error) {
-      console.error('Greška pri ažuriranju količine:', error);
-      toast.error('Nije moguće ažurirati količinu');
+      console.error('Error updating quantity:', error);
+      toast.error(error.message || 'Unable to update quantity');
     }
-  }, [user, fetchCart]);
+  }, [user]);
 
   const getCartCount = useCallback(() => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -108,7 +114,7 @@ export function CartProvider({ children }) {
 
   const checkout = useCallback(async (shippingAddress) => {
     if (!user) {
-      toast.error('Morate biti prijavljeni da biste izvršili kupovinu');
+      toast.error('You must be logged in to checkout');
       return;
     }
 
@@ -129,12 +135,12 @@ export function CartProvider({ children }) {
       }
 
       const result = await response.json();
-      setCartItems([]); // Očisti lokalnu košaricu
-      toast.success('Narudžba uspješno kreirana!');
+      setCartItems([]); // Clear local cart
+      toast.success('Order successfully created!');
       return result.orderId;
     } catch (error) {
-      console.error('Greška pri checkout-u:', error);
-      toast.error(error.message || 'Nije moguće izvršiti kupovinu');
+      console.error('Error during checkout:', error);
+      toast.error(error.message || 'Unable to complete checkout');
       return null;
     }
   }, [user]);

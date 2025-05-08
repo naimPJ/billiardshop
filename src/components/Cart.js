@@ -47,23 +47,23 @@ function Cart() {
         <>
           <div className="cart-items">
             {cartItems.map(item => (
-              <div key={item.id} className="cart-item">
-                <img src={item.image} alt={item.name} />
+              <div key={item.productId} className="cart-item">
+                <img src={item.imageUrl} alt={item.name} />
                 <div className="item-details">
                   <h3>{item.name}</h3>
                   <p className="price">${item.price.toFixed(2)}</p>
                   <div className="quantity-controls">
                     <button 
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >-</button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                    <button onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</button>
                   </div>
                 </div>
                 <div className="item-total">
                   <p>${(item.price * item.quantity).toFixed(2)}</p>
-                  <button className="remove-item" onClick={() => removeFromCart(item.id)}>Remove</button>
+                  <button className="remove-item" onClick={() => removeFromCart(item.productId)}>Remove</button>
                 </div>
               </div>
             ))}

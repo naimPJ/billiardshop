@@ -2,29 +2,34 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Dohvati košaricu korisnika
+// Get user's cart
 router.get('/:customerId', async (req, res) => {
     try {
         const { customerId } = req.params;
 
-        // Prvo dohvati ili kreiraj košaricu za korisnika
+        // First get or create cart for user
         let [cart] = await db.query('SELECT * FROM Cart WHERE customerId = ?', [customerId]);
         
         if (cart.length === 0) {
-            // Kreiraj novu košaricu ako ne postoji
+            // Create new cart if it doesn't exist
             const [result] = await db.query('INSERT INTO Cart (customerId) VALUES (?)', [customerId]);
             cart = [{ id: result.insertId, customerId }];
         }
 
-        // Dohvati sve proizvode u košarici
+        // Get all products in cart
         const [cartItems] = await db.query(`
-            SELECT ci.*, p.name, p.price, p.imageUrl
+            SELECT 
+                ci.productId,
+                ci.quantity,
+                p.name,
+                p.price,
+                p.imageUrl
             FROM CartItem ci
             JOIN Product p ON ci.productId = p.id
             WHERE ci.cartId = ?
         `, [cart[0].id]);
 
-        // Konvertuj cijene u brojeve
+        // Convert prices to numbers
         const formattedCartItems = cartItems.map(item => ({
             ...item,
             price: parseFloat(item.price)
@@ -32,18 +37,18 @@ router.get('/:customerId', async (req, res) => {
 
         res.json(formattedCartItems);
     } catch (error) {
-        console.error('Greška pri dohvatanju košarice:', error);
-        res.status(500).json({ message: 'Greška pri dohvatanju košarice', error: error.message });
+        console.error('Error fetching cart:', error);
+        res.status(500).json({ message: 'Error fetching cart', error: error.message });
     }
 });
 
-// Dodaj proizvod u košaricu
+// Add product to cart
 router.post('/:customerId/items', async (req, res) => {
     try {
         const { customerId } = req.params;
         const { productId, quantity } = req.body;
 
-        // Dohvati ili kreiraj košaricu
+        // Get or create cart
         let [cart] = await db.query('SELECT * FROM Cart WHERE customerId = ?', [customerId]);
         
         if (cart.length === 0) {
@@ -51,34 +56,34 @@ router.post('/:customerId/items', async (req, res) => {
             cart = [{ id: result.insertId }];
         }
 
-        // Provjeri da li proizvod već postoji u košarici
+        // Check if product already exists in cart
         const [existingItem] = await db.query(
             'SELECT * FROM CartItem WHERE cartId = ? AND productId = ?',
             [cart[0].id, productId]
         );
 
         if (existingItem.length > 0) {
-            // Ažuriraj količinu
+            // Update quantity
             await db.query(
                 'UPDATE CartItem SET quantity = quantity + ? WHERE cartId = ? AND productId = ?',
                 [quantity, cart[0].id, productId]
             );
         } else {
-            // Dodaj novi proizvod
+            // Add new product
             await db.query(
                 'INSERT INTO CartItem (cartId, productId, quantity) VALUES (?, ?, ?)',
                 [cart[0].id, productId, quantity]
             );
         }
 
-        res.status(201).json({ message: 'Proizvod dodan u košaricu' });
+        res.status(201).json({ message: 'Product added to cart' });
     } catch (error) {
-        console.error('Greška pri dodavanju u košaricu:', error);
-        res.status(500).json({ message: 'Greška pri dodavanju u košaricu', error: error.message });
+        console.error('Error adding to cart:', error);
+        res.status(500).json({ message: 'Error adding to cart', error: error.message });
     }
 });
 
-// Ažuriraj količinu proizvoda u košarici
+// Update product quantity in cart
 router.put('/:customerId/items/:productId', async (req, res) => {
     try {
         const { customerId, productId } = req.params;
@@ -86,7 +91,17 @@ router.put('/:customerId/items/:productId', async (req, res) => {
 
         const [cart] = await db.query('SELECT * FROM Cart WHERE customerId = ?', [customerId]);
         if (cart.length === 0) {
-            return res.status(404).json({ message: 'Košarica nije pronađena' });
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        // Check if product exists in cart
+        const [cartItem] = await db.query(
+            'SELECT * FROM CartItem WHERE cartId = ? AND productId = ?',
+            [cart[0].id, productId]
+        );
+
+        if (cartItem.length === 0) {
+            return res.status(404).json({ message: 'Product not found in cart' });
         }
 
         await db.query(
@@ -94,21 +109,50 @@ router.put('/:customerId/items/:productId', async (req, res) => {
             [quantity, cart[0].id, productId]
         );
 
-        res.json({ message: 'Količina ažurirana' });
+        // Get updated data after PUT request
+        const [updatedCartItems] = await db.query(`
+            SELECT 
+                ci.productId,
+                ci.quantity,
+                p.name,
+                p.price,
+                p.imageUrl
+            FROM CartItem ci
+            JOIN Product p ON ci.productId = p.id
+            WHERE ci.cartId = ?
+        `, [cart[0].id]);
+
+        res.json({
+            message: 'Quantity updated',
+            cartItems: updatedCartItems.map(item => ({
+                ...item,
+                price: parseFloat(item.price)
+            }))
+        });
     } catch (error) {
-        console.error('Greška pri ažuriranju količine:', error);
-        res.status(500).json({ message: 'Greška pri ažuriranju količine', error: error.message });
+        console.error('Error updating quantity:', error);
+        res.status(500).json({ message: 'Error updating quantity', error: error.message });
     }
 });
 
-// Ukloni proizvod iz košarice
+// Remove product from cart
 router.delete('/:customerId/items/:productId', async (req, res) => {
     try {
         const { customerId, productId } = req.params;
 
         const [cart] = await db.query('SELECT * FROM Cart WHERE customerId = ?', [customerId]);
         if (cart.length === 0) {
-            return res.status(404).json({ message: 'Košarica nije pronađena' });
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        // Check if product exists in cart
+        const [cartItem] = await db.query(
+            'SELECT * FROM CartItem WHERE cartId = ? AND productId = ?',
+            [cart[0].id, productId]
+        );
+
+        if (cartItem.length === 0) {
+            return res.status(404).json({ message: 'Product not found in cart' });
         }
 
         await db.query(
@@ -116,30 +160,49 @@ router.delete('/:customerId/items/:productId', async (req, res) => {
             [cart[0].id, productId]
         );
 
-        res.json({ message: 'Proizvod uklonjen iz košarice' });
+        // Get updated data after DELETE request
+        const [updatedCartItems] = await db.query(`
+            SELECT 
+                ci.productId,
+                ci.quantity,
+                p.name,
+                p.price,
+                p.imageUrl
+            FROM CartItem ci
+            JOIN Product p ON ci.productId = p.id
+            WHERE ci.cartId = ?
+        `, [cart[0].id]);
+
+        res.json({
+            message: 'Product removed from cart',
+            cartItems: updatedCartItems.map(item => ({
+                ...item,
+                price: parseFloat(item.price)
+            }))
+        });
     } catch (error) {
-        console.error('Greška pri uklanjanju iz košarice:', error);
-        res.status(500).json({ message: 'Greška pri uklanjanju iz košarice', error: error.message });
+        console.error('Error removing from cart:', error);
+        res.status(500).json({ message: 'Error removing from cart', error: error.message });
     }
 });
 
-// Checkout ruta
+// Checkout route
 router.post('/:customerId/checkout', async (req, res) => {
     try {
         const { customerId } = req.params;
-        const { shippingAddress, paymentDetails } = req.body;
+        const { shippingAddress } = req.body;
 
-        // Započni transakciju
+        // Start transaction
         await db.beginTransaction();
 
         try {
-            // Dohvati košaricu
+            // Get cart
             const [cart] = await db.query('SELECT * FROM Cart WHERE customerId = ?', [customerId]);
             if (cart.length === 0) {
-                throw new Error('Košarica nije pronađena');
+                throw new Error('Cart not found');
             }
 
-            // Dohvati proizvode iz košarice
+            // Get products from cart
             const [cartItems] = await db.query(`
                 SELECT ci.*, p.name, p.price, p.inStock
                 FROM CartItem ci
@@ -147,33 +210,33 @@ router.post('/:customerId/checkout', async (req, res) => {
                 WHERE ci.cartId = ?
             `, [cart[0].id]);
 
-            // Konvertuj cijene u brojeve i provjeri dostupnost proizvoda
+            // Convert prices to numbers and check product availability
             const formattedCartItems = cartItems.map(item => ({
                 ...item,
                 price: parseFloat(item.price)
             }));
 
-            // Provjeri dostupnost proizvoda
+            // Check product availability
             for (const item of formattedCartItems) {
                 if (item.quantity > item.inStock) {
-                    throw new Error(`Proizvod ${item.name} nema dovoljno zaliha`);
+                    throw new Error(`Product ${item.name} is out of stock`);
                 }
             }
 
-            // Kreiraj narudžbu
+            // Create order
             const [orderResult] = await db.query(`
                 INSERT INTO \`Order\` (customerId, totalAmount, shippingAddress, status)
                 VALUES (?, ?, ?, 'PENDING')
             `, [customerId, formattedCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0), shippingAddress]);
 
-            // Dodaj stavke narudžbe
+            // Add order items
             for (const item of formattedCartItems) {
                 await db.query(`
                     INSERT INTO OrderItem (orderId, productId, quantity, price)
                     VALUES (?, ?, ?, ?)
                 `, [orderResult.insertId, item.productId, item.quantity, item.price]);
 
-                // Ažuriraj stanje proizvoda
+                // Update product stock
                 await db.query(`
                     UPDATE Product
                     SET inStock = inStock - ?
@@ -181,24 +244,24 @@ router.post('/:customerId/checkout', async (req, res) => {
                 `, [item.quantity, item.productId]);
             }
 
-            // Očisti košaricu
+            // Clear cart
             await db.query('DELETE FROM CartItem WHERE cartId = ?', [cart[0].id]);
 
-            // Potvrdi transakciju
+            // Commit transaction
             await db.commit();
 
             res.status(201).json({
-                message: 'Narudžba uspješno kreirana',
+                message: 'Order successfully created',
                 orderId: orderResult.insertId
             });
         } catch (error) {
-            // Poništi transakciju u slučaju greške
+            // Rollback transaction in case of error
             await db.rollback();
             throw error;
         }
     } catch (error) {
-        console.error('Greška pri checkout-u:', error);
-        res.status(500).json({ message: 'Greška pri checkout-u', error: error.message });
+        console.error('Error during checkout:', error);
+        res.status(500).json({ message: 'Error during checkout', error: error.message });
     }
 });
 
