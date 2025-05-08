@@ -50,7 +50,7 @@ main {
 }
 
 .hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://www.daysoftheyear.com/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Ch=1366%2Cq=85%2Cw=2048/wp-content/uploads/preparing-to-break-spheres-into-the-pool-pocket-p-2023-02-28-18-09-43-utc.jpg');
   background-size: cover;
   background-position: center;
   color: white;
@@ -157,3 +157,17 @@ footer {
 .auth-icon a:hover {
   color: #ffd700;
 }
+
+.logout-button {
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: white; /* Or whatever color your header uses */
+}
+
+.logout-button:hover {
+  color: yellow;
+}
+
+

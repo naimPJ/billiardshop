@@ -12,6 +12,8 @@ import Cart from './components/Cart';
 import Login from './components/Login';
 import Register from './components/Register';
 import OrderConfirmation from './components/OrderConfirmation';
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+
 
 function AppContent() {
   const { getCartCount } = useCart();
@@ -52,9 +54,12 @@ function AppContent() {
             <li className="auth-icon">
               {user ? (
                 <div className="user-menu">
-                  <span>{user.name}</span>
-                  <button onClick={handleLogout}>Logout</button>
-                </div>
+                <span>{user.name}</span>
+                <button onClick={handleLogout} className="logout-button">
+                <FontAwesomeIcon icon={faRightFromBracket} title="Logout" size="lg" />
+                </button>
+              </div>
+              
               ) : (
                 <Link to="/login">
                   <FontAwesomeIcon icon={faUser} />
