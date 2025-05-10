@@ -12,6 +12,8 @@ import Cart from './components/Cart';
 import Login from './components/Login';
 import Register from './components/Register';
 import OrderConfirmation from './components/OrderConfirmation';
+import AboutUs from './components/AboutUs';
+import Contact from './components/Contact';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 
 
@@ -103,6 +105,8 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
 
