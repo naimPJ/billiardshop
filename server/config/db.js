@@ -1,5 +1,7 @@
 require('dotenv').config();
 const mysql = require('mysql2');
+const fs = require('fs');
+const path = require('path');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'billiardshop.mysql.database.azure.com',
@@ -8,7 +10,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'billiardshop',
   port: process.env.DB_PORT || 3306,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: true,
+    minVersion: 'TLSv1.2'
   },
   connectTimeout: 120000,
   waitForConnections: true,
@@ -29,13 +32,16 @@ pool.getConnection((err, connection) => {
       sqlMessage: err.sqlMessage,
       host: process.env.DB_HOST || 'billiardshop.mysql.database.azure.com',
       user: process.env.DB_USER || 'naim@billiardshop',
-      database: process.env.DB_NAME || 'billiardshop'
+      database: process.env.DB_NAME || 'billiardshop',
+      ssl: true,
+      tlsVersion: '1.2'
     });
     return;
   }
   console.log('Uspješno povezano sa bazom podataka!');
   console.log('Host:', process.env.DB_HOST || 'billiardshop.mysql.database.azure.com');
   console.log('Database:', process.env.DB_NAME || 'billiardshop');
+  console.log('SSL/TLS: Enabled, Version 1.2');
   connection.release();
 });
 
