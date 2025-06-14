@@ -1,11 +1,15 @@
+require('dotenv').config();
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'Naim2410',
-  database: 'billiardshop',
-  port: 3306,
+  host: process.env.DB_HOST || 'billiardshop.mysql.database.azure.com',
+  user: process.env.DB_USER || 'naim',
+  password: process.env.DB_PASSWORD || 'Naim2410',
+  database: process.env.DB_NAME || 'billiardshop',
+  port: process.env.DB_PORT || 3306,
+  ssl: {
+    rejectUnauthorized: true
+  },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -13,5 +17,17 @@ const pool = mysql.createPool({
 
 // Kreiranje promise wrapper-a za pool
 const promisePool = pool.promise();
+
+// Test konekcije
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error('Greška pri povezivanju sa bazom:', err);
+    return;
+  }
+  console.log('Uspješno povezano sa bazom podataka!');
+  console.log('Host:', process.env.DB_HOST || 'billiardshop.mysql.database.azure.com');
+  console.log('Database:', process.env.DB_NAME || 'billiardshop');
+  connection.release();
+});
 
 module.exports = promisePool; 

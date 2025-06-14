@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: billiardshop-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: billiardshop.mysql.database.azure.com
+      - key: DB_USER
+        value: naim
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: billiardshop
+      - key: DB_PORT
+        value: 3306 
