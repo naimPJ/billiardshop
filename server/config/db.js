@@ -8,8 +8,9 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'billiardshop',
   port: process.env.DB_PORT || 3306,
   ssl: {
-    rejectUnauthorized: true
+    rejectUnauthorized: false
   },
+  connectTimeout: 60000,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
