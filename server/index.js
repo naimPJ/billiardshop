@@ -9,7 +9,12 @@ const productRoutes = require('./routes/products');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Dozvoljava pristup sa bilo kojeg domena
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Dozvoljene HTTP metode
+  allowedHeaders: ['Content-Type', 'Authorization'], // Dozvoljeni headeri
+  credentials: true // Dozvoljava slanje kredencijala (cookies, auth headers)
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
