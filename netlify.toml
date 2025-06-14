@@ -1,0 +1,19 @@
+[build]
+  base = "/"
+  command = "npm run build"
+  publish = "build"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./"
+
+[context.production]
+  publish = "build"
+  command = "npm run build"
+
+[context.project]
+  publish = "build"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 
+  status = 200 

@@ -5,7 +5,7 @@ const path = require('path');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'billiardshop.mysql.database.azure.com',
-  user: process.env.DB_USER || 'naim@billiardshop',
+  user: process.env.DB_USER || 'naim',
   password: process.env.DB_PASSWORD || 'Naim2410',
   database: process.env.DB_NAME || 'billiardshop',
   port: process.env.DB_PORT || 3306,
