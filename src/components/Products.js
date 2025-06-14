@@ -14,7 +14,7 @@ function Products() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/products');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/products`);
       if (!response.ok) throw new Error('Greška pri dohvatanju proizvoda');
       const data = await response.json();
       setProducts(data);

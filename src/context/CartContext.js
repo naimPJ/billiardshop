@@ -12,7 +12,7 @@ export function CartProvider({ children }) {
     if (!user) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/cart/${user.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${user.id}`);
       if (!response.ok) throw new Error('Error fetching cart');
       const data = await response.json();
       setCartItems(data);
@@ -38,7 +38,7 @@ export function CartProvider({ children }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/cart/${user.id}/items`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${user.id}/items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ export function CartProvider({ children }) {
     if (!user) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/cart/${user.id}/items/${productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${user.id}/items/${productId}`, {
         method: 'DELETE'
       });
 
@@ -86,7 +86,7 @@ export function CartProvider({ children }) {
     if (!user || newQuantity < 1) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/cart/${user.id}/items/${productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${user.id}/items/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -119,7 +119,7 @@ export function CartProvider({ children }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/cart/${user.id}/checkout`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${user.id}/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
